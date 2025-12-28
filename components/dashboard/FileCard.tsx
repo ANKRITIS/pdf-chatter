@@ -1,27 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { FileText, MessageSquare, MoreVertical, Trash2, ExternalLink, Loader2 } from "lucide-react";
+import { FileText, MessageCircle, Loader2, Trash2, Clock } from "lucide-react";
 import { format } from "date-fns";
+import { useState } from "react";
 import { toast } from "react-hot-toast";
 
 interface FileCardProps {
@@ -37,151 +21,90 @@ interface FileCardProps {
 
 export default function FileCard({ file, messageCount }: FileCardProps) {
   const router = useRouter();
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async () => {
+    if (!confirm(`Delete "${file.name}"?`)) return;
+    
     setIsDeleting(true);
     try {
-      const response = await fetch(`/api/files/${file.id}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) throw new Error("Failed to delete");
-
-      toast.success("File deleted successfully");
+      const res = await fetch(`/api/files/${file.id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error();
+      toast.success("File deleted");
       router.refresh();
-    } catch (error) {
-      toast.error("Failed to delete file");
-    } finally {
+    } catch {
+      toast.error("Delete failed");
       setIsDeleting(false);
-      setIsDeleteDialogOpen(false);
     }
   };
 
-  const getStatusBadge = () => {
-    switch (file.uploadStatus) {
-      case "SUCCESS":
-        return (
-          <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-700 rounded-full">
-            Ready
-          </span>
-        );
-      case "PROCESSING":
-        return (
-          <span className="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-700 rounded-full flex items-center gap-1">
-            <Loader2 className="h-3 w-3 animate-spin" />
-            Processing
-          </span>
-        );
-      case "FAILED":
-        return (
-          <span className="px-2 py-1 text-xs font-medium bg-red-100 text-red-700 rounded-full">
-            Failed
-          </span>
-        );
-      default:
-        return null;
-    }
-  };
+  const isReady = file.uploadStatus === "SUCCESS";
+  const isProcessing = file.uploadStatus === "PROCESSING";
 
   return (
-    <>
-      <Card className="p-4 hover:shadow-lg transition-shadow cursor-pointer group">
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex items-start gap-3 flex-1">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <FileText className="h-5 w-5 text-blue-600" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-sm truncate group-hover:text-blue-600 transition-colors">
-                {file.name}
-              </h3>
-              <p className="text-xs text-zinc-500 mt-1">
-                {format(new Date(file.createdAt), "MMM d, yyyy")}
-              </p>
-            </div>
+    <Card className="group p-6 border border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all">
+      
+      {/* Header */}
+      <div className="flex items-start gap-3 mb-4">
+        <div className="p-2 bg-gray-100 rounded-lg group-hover:bg-blue-50 transition-colors">
+          <FileText className="h-5 w-5 text-gray-700 group-hover:text-blue-600" />
+        </div>
+        
+        <div className="flex-1 min-w-0">
+          <h3 className="font-semibold text-gray-900 truncate mb-1">
+            {file.name}
+          </h3>
+          <div className="flex items-center gap-1 text-xs text-gray-500">
+            <Clock className="h-3 w-3" />
+            <span>{format(new Date(file.createdAt), "MMM d, h:mm a")}</span>
           </div>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() => router.push(`/dashboard/${file.id}`)}
-              >
-                <MessageSquare className="h-4 w-4 mr-2" />
-                Open Chat
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => window.open(file.url, "_blank")}>
-                <ExternalLink className="h-4 w-4 mr-2" />
-                View PDF
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => setIsDeleteDialogOpen(true)}
-                className="text-red-600"
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
 
-        <div className="flex items-center justify-between pt-3 border-t border-zinc-100">
-          <div className="flex items-center gap-4 text-xs text-zinc-600">
-            <div className="flex items-center gap-1">
-              <MessageSquare className="h-3 w-3" />
-              <span>{messageCount} messages</span>
-            </div>
+        {/* Status */}
+        {isReady && (
+          <div className="px-2 py-1 bg-green-50 text-green-700 text-xs font-medium rounded">
+            Ready
           </div>
-          {getStatusBadge()}
-        </div>
+        )}
+        {isProcessing && (
+          <div className="px-2 py-1 bg-yellow-50 text-yellow-700 text-xs font-medium rounded flex items-center gap-1">
+            <Loader2 className="h-3 w-3 animate-spin" />
+            Processing
+          </div>
+        )}
+      </div>
 
+      {/* Stats */}
+      <div className="flex items-center gap-2 text-sm text-gray-600 mb-4 pb-4 border-b border-gray-100">
+        <MessageCircle className="h-4 w-4" />
+        <span>{messageCount} messages</span>
+      </div>
+
+      {/* Actions */}
+      <div className="flex gap-2">
         <Button
           onClick={() => router.push(`/dashboard/${file.id}`)}
-          className="w-full mt-3"
+          disabled={!isReady}
+          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white disabled:bg-gray-300 disabled:text-gray-500"
+          size="sm"
+        >
+          {isReady ? "Open Chat" : "Processing..."}
+        </Button>
+        
+        <Button
+          onClick={handleDelete}
+          disabled={isDeleting}
           variant="outline"
           size="sm"
-          disabled={file.uploadStatus !== "SUCCESS"}
+          className="border-gray-300 hover:bg-red-50 hover:text-red-600 hover:border-red-300"
         >
-          <MessageSquare className="h-4 w-4 mr-2" />
-          {file.uploadStatus === "SUCCESS" ? "Open Chat" : "Processing..."}
+          {isDeleting ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Trash2 className="h-4 w-4" />
+          )}
         </Button>
-      </Card>
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Document</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete "{file.name}"? This will also delete all
-              associated messages. This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              disabled={isDeleting}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              {isDeleting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Deleting...
-                </>
-              ) : (
-                "Delete"
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+      </div>
+    </Card>
   );
 }

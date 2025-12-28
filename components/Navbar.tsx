@@ -9,7 +9,7 @@ const Navbar = () => {
         
         {/* Logo / Home Link */}
         <Link href="/" className="flex z-40 font-semibold">
-          <span>quill.</span>
+          <span>Home</span>
         </Link>
 
         {/* Right Side - Auth Buttons */}
