@@ -5,7 +5,7 @@
 
 [Visit Live App](https://askdocs-study.vercel.app)
 
-[![Live Demo](https://img.shields.io/badge/Live_Demo-Visit_AskDocs-blue?style=for-the-badge&logo=vercel)](https://askdocs-study.vercel.app)
+[![](https://img.shields.io/badge/-Visit_AskDocs-black?style=for-the-badge&logo=vercel)](https://askdocs-study.vercel.app)
 
 ![Project Demo Placeholder](https://via.placeholder.com/800x400?text=AskDocs+Demo+Coming+Soon)
 
